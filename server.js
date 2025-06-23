@@ -8,9 +8,10 @@ dotenv.config();
 const app = e();
 app.use(e.json());
 app.use(cors({
-      origin: "http://localhost:5173"||"https://sigmajeeoff.netlify.app/", // or your frontend domain
+  origin: ["http://localhost:5173", "https://sigmajeeoff.netlify.app"],
   credentials: true
 }));
+
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
