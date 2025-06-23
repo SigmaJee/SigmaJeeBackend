@@ -8,9 +8,13 @@ dotenv.config();
 const app = e();
 app.use(e.json());
 app.use(cors({
-      origin: "http://localhost:5173", // or your frontend domain
+      origin: "http://localhost:5173"||"https://sigmajeeoff.netlify.app/", // or your frontend domain
   credentials: true
 }));
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
+});
+
 app.use(cookieParser());
 try {
     const Uri = process.env.URI;
