@@ -75,15 +75,16 @@ export const Createuser = async (req, res) => {
         return res.status(404).json({ message: "Failed to create User" });
     }
     console.log(newUser);
+    return res.status(200).json("User Created");
 }
 export const DeleteUser = async (req, res) => {
     const { Email } = req.body;
     try {
         await User.deleteOne({ Email });
-
+        return res.status(200).json("User Deleted");
     } catch (error) {
         console.log("Error in deleting");
-
+        return res.status(200).json("Deletion failed");
     }
 
 }
