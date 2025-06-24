@@ -12,12 +12,12 @@ const transporter = nodemailer.createTransport({
 });
 export const DirectLogin = async (req, res) => {
     const { email, pass } = req.body;
-    console.log(typeof(email));
+    console.log(typeof (email));
     console.log(email);
-    
-    const user = await User.findOne({ Email:email });
-    if(!user){
-         res.status(400).json("User not found");
+
+    const user = await User.findOne({ Email: email });
+    if (!user) {
+        res.status(400).json("User not found");
         console.log("User not found");
         return;
     }
@@ -59,9 +59,31 @@ export const Sendotp = async (req, res) => {
     try {
         await transporter.sendMail(mailOptions);
         console.log(otp);
-         return res.status(200).json({message:"Email Sent Successfully",otp:otp});
+        return res.status(200).json({ message: "Email Sent Successfully", otp: otp });
     } catch (error) {
         console.log(error);
-        return res.status(401).json({message:"Mail Not Sent"});
-    }  
+        return res.status(401).json({ message: "Mail Not Sent" });
+    }
+}
+export const Createuser = async (req, res) => {
+    const { Name, Class, Password, Email } = req.body;
+    const newUser = await User.create({
+        Name, Email, Password, Class
+    })
+    if (!newUser) {
+        console.log("Failed to create user");
+        return res.status(404).json({ message: "Failed to create User" });
+    }
+    console.log(newUser);
+}
+export const DeleteUser = async (req, res) => {
+    const { Email } = req.body;
+    try {
+        await User.deleteOne({ Email });
+
+    } catch (error) {
+        console.log("Error in deleting");
+
+    }
+
 }
