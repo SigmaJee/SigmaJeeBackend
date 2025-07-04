@@ -9,7 +9,7 @@ const app = e();
 app.use(e.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: ["http://localhost:5173", "https://sigmajeeoff.netlify.app"],
+  origin: ["https://sigmajeeoff.netlify.app"],
   credentials: true
 }));
 
