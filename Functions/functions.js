@@ -30,7 +30,7 @@ export const DirectLogin = async (req, res) => {
         }), {
             httpOnly: true,
             secure: true,
-            sameSite: "None",
+            sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000,
         });
         return res.status(200).json({ message: "Login Successfull" });
@@ -108,8 +108,8 @@ export const GiveUser = async (req, res) => {
         id: user._id,
     }), {
         httpOnly: true,
-        secure: false,
-        sameSite: "None",
+        secure: true,
+        sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000,
     });
     return res.status(200).json({ mess: "Sent the User" });
