@@ -101,7 +101,8 @@ export const DeleteUser = async (req, res) => {
 }
 export const GiveUser = async (req, res) => {
     const { Email } = req.body;
-    const user = await User.findOne({ Email });
+    try {
+        const user = await User.findOne({ Email });
     res.cookie("user", JSON.stringify({
         Email: user.Email,
         Name: user.Name,
@@ -113,6 +114,13 @@ export const GiveUser = async (req, res) => {
         maxAge: 24 * 60 * 60 * 1000,
     });
     return res.status(200).json({ mess: "Sent the User" });
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(404).json({});
+        
+    }
+    
 }
 
 export const CreateTest = async (req, res) => {
