@@ -309,9 +309,6 @@ export const GetCreatedTests = async (req, res) => {
     }
 
 }
-
-import PDFDocument from "pdfkit";
-
 export const GeneratePdf = async (req, res) => {
   const { paperData } = req.body;
 
