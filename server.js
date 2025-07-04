@@ -16,6 +16,15 @@ app.use(cors({
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
+app.get("/test-cookie", (req, res) => {
+  res.cookie("demo", "working", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    maxAge: 10000,
+  });
+  res.send("Cookie test");
+});
 
 
 try {
