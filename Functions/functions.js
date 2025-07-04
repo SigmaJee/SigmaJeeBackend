@@ -33,7 +33,7 @@ export const DirectLogin = async (req, res) => {
             sameSite: "None",
             maxAge: 24 * 60 * 60 * 1000,
         });
-        return res.status(200).json({ message: "Login Successfull" });
+        return res.status(200).json({ message: "Login Successfull" ,userId:user._id});
     }
     return res.status(404).json({ message: "Incorrect Pass" });
 }
@@ -86,7 +86,7 @@ export const Createuser = async (req, res) => {
         return res.status(404).json({ message: "Failed to create User" });
     }
     console.log(newUser);
-    return res.status(200).json("User Created");
+    return res.status(200).json({mess:"User Created",userId:newUser._id});
 }
 export const DeleteUser = async (req, res) => {
     const { Email } = req.body;
@@ -101,30 +101,26 @@ export const DeleteUser = async (req, res) => {
 }
 export const GiveUser = async (req, res) => {
     try {
-        
         const { Email } = req.body;
-    const user = await User.findOne({ Email });
-    res.cookie("user", JSON.stringify({
-        Email: user.Email,
-        Name: user.Name,
-        id: user._id,
-    }), {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        maxAge: 24 * 60 * 60 * 1000,
-    });
-    console.log(user);
-    
-    return res.status(200).json({ mess: "Sent the User" });
+        const user = await User.findOne({ Email }).lean(); // ✅
+
+        console.log("USER FOUND:", user);
+
+        if (!user) {
+            return res.status(404).json({ mess: "No user found" });
+        }
+
+        return res.status(200).json({
+            mess: "Sent the User",
+            userId: user._id
+        });
     } catch (error) {
         console.log(error);
-        
-        return res.status(402).json({mess:"Errr"});
-        
+        return res.status(500).json({ mess: "Error" });
     }
-    
-}
+};
+
+
 
 export const CreateTest = async (req, res) => {
     const { Title, Subject } = req.body;
@@ -138,7 +134,7 @@ export const CreateTest = async (req, res) => {
             sameSite: true,
             httpOnly: true,
         })
-        return res.status(200).json({ mess: "Created" })
+        return res.status(200).json({ mess: "Created", id: CreatedTest._id })
     } catch (error) {
         console.log(error);
         return res.status(400).json({ mess: "Failed to create" })
@@ -155,10 +151,7 @@ export const GetAllTests = async (req, res) => {
 }
 export const EditPaper = async (req, res) => {
     try {
-        const user = JSON.parse(req.cookies.user);
-        const id = req.cookies.id;
-        const { Statements, Saved, Options, Answers, duration } = req.body;
-        res.clearCookie("id");
+        const { Statements, Saved, Options, Answers, duration, userId, id } = req.body;
         const test = await Test.findOne({ _id: id });
         if (!test) return res.status(400).json({ mess: "Paper not found" });
 
@@ -174,10 +167,10 @@ export const EditPaper = async (req, res) => {
         }
         test.Questions = ques;
         test.Duration = duration;
-
+        console.log(userId);
         await test.save();
-        const userId = user.id;
         const userTest = await UserTest.findOne({ UserId: userId });
+        console.log(UserTest);
         const created = userTest.Created;
         created.push(test);
         console.log(userTest);
@@ -305,8 +298,7 @@ export const GetTest = async (req, res) => {
 }
 export const GetCreatedTests = async (req, res) => {
     try {
-        const user = JSON.parse(req.cookies.user);
-        const UserId = user.id;
+        const { UserId } = req.body;
         const UserTests = await UserTest.findOne({ UserId });
         const created = UserTests.Created;
         console.log(created);
@@ -318,16 +310,14 @@ export const GetCreatedTests = async (req, res) => {
 
 }
 
+import PDFDocument from "pdfkit";
+
 export const GeneratePdf = async (req, res) => {
   const { paperData } = req.body;
 
   try {
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
     let chunks = [];
-
-    // Hindi + English font registration
-    doc.registerFont("English", path.resolve("fonts/Roboto-Regular.ttf"));
-    doc.registerFont("Hindi", path.resolve("fonts/NotoSansDevanagari-Regular.ttf"));
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=TestPaper.pdf");
@@ -339,32 +329,26 @@ export const GeneratePdf = async (req, res) => {
     });
 
     // 🔷 HEADER
-    doc.font("English").fontSize(16).text("SigmaJEE", { continued: true }).font("English").text("____________________", { align: "left" });
+    doc.fontSize(16).text("SigmaJEE");
     doc.moveDown();
-
-    doc.font("English").fontSize(10).text(`Target: JEE (Main + Advanced) 2025 | Paper: ${paperData.Title || "Mock Test"}`, { align: "right" });
+    doc.fontSize(10).text(`Target: JEE (Main + Advanced) 2025 | Paper: ${paperData.Title || "Mock Test"}`, { align: "right" });
     doc.moveDown(0.5);
-
-    doc.fontSize(14).text(`Time: ${paperData.Duration || 180} minutes`, { align: "left" });
+    doc.fontSize(14).text(`Time: ${paperData.Duration || 180} minutes`);
     doc.moveDown();
 
     // 🔷 Questions
     paperData.Questions.forEach((q, index) => {
       doc.moveDown(0.5);
-      doc.font("English").fontSize(12).text(`${index + 1}. ${q.Statement}`);
-      if (q.StatementHindi) {
-        doc.font("Hindi").fontSize(12).text(q.StatementHindi);
-      }
+      doc.fontSize(12).text(`${index + 1}. ${q.Statement}`);
 
       q.Option.forEach((opt, i) => {
         const optChar = String.fromCharCode(65 + i);
-        doc.font("English").fontSize(11).text(`   (${optChar}) ${opt}`);
+        doc.fontSize(11).text(`   (${optChar}) ${opt}`);
       });
 
       doc.moveDown();
     });
 
-    // ✅ Footer or more formatting if needed
     doc.end();
 
   } catch (err) {
