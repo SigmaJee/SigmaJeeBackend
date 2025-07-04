@@ -29,8 +29,8 @@ export const DirectLogin = async (req, res) => {
             id: user._id,
         }), {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: true,
+            sameSite: "None",
             maxAge: 24 * 60 * 60 * 1000,
         });
         return res.status(200).json({ message: "Login Successfull" });
@@ -109,7 +109,7 @@ export const GiveUser = async (req, res) => {
     }), {
         httpOnly: true,
         secure: false,
-        sameSite: "lax",
+        sameSite: "None",
         maxAge: 24 * 60 * 60 * 1000,
     });
     return res.status(200).json({ mess: "Sent the User" });
@@ -214,7 +214,7 @@ export const GetAllUserTest = async (req, res) => {
         try {
             user = JSON.parse(userCookie);
         } catch (err) {
-            return res.status(400).json({ message: "Invalid user cookie format" });
+            return res.status(200).json({ message: "Invalid user cookie format" });
         }
 
         const id = user.id;
