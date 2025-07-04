@@ -23,17 +23,17 @@ export const DirectLogin = async (req, res) => {
         return;
     }
     if (user.Password === pass) {
-        res.cookie("user", JSON.stringify({
-            Email: user.Email,
-            Name: user.Name,
-            id: user._id,
-        }), {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-        return res.status(200).json({ message: "Login Successfull" });
+        // res.cookie("user", JSON.stringify({
+        //     Email: user.Email,
+        //     Name: user.Name,
+        //     id: user._id,
+        // }), {
+        //     httpOnly: true,
+        //     secure: true,
+        //     sameSite: "None",
+        //     maxAge: 24 * 60 * 60 * 1000,
+        // });
+        return res.status(200).json({ message: "Login Successfull", user: user });
     }
     return res.status(404).json({ message: "Incorrect Pass" });
 }
@@ -86,7 +86,7 @@ export const Createuser = async (req, res) => {
         return res.status(404).json({ message: "Failed to create User" });
     }
     console.log(newUser);
-    return res.status(200).json("User Created");
+    return res.status(200).json({ mess: "User Created", user: newUser });
 }
 export const DeleteUser = async (req, res) => {
     const { Email } = req.body;
@@ -99,30 +99,6 @@ export const DeleteUser = async (req, res) => {
     }
 
 }
-export const GiveUser = async (req, res) => {
-    const { Email } = req.body;
-    try {
-        const user = await User.findOne({ Email });
-    res.cookie("user", JSON.stringify({
-        Email: user.Email,
-        Name: user.Name,
-        id: user._id,
-    }), {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        maxAge: 24 * 60 * 60 * 1000,
-    });
-    return res.status(200).json({ mess: "Sent the User" });
-        
-    } catch (error) {
-        console.log(error);
-        return res.status(404).json({});
-        
-    }
-    
-}
-
 export const CreateTest = async (req, res) => {
     const { Title, Subject } = req.body;
 
@@ -131,14 +107,10 @@ export const CreateTest = async (req, res) => {
         const CreatedTest = await Test.create(NewTest);
         console.log(CreatedTest);
         console.log(CreatedTest._id);
-        res.cookie("id", CreatedTest._id, {
-            sameSite: true,
-            httpOnly: true,
-        })
-        return res.status(200).json({ mess: "Created" })
+        return res.status(200).json({ mess: "Created", id: CreatedTest._id })
     } catch (error) {
         console.log(error);
-        return res.status(400).json({ mess: "Failed to create" })
+        return res.status(400).json({ mess: "Failed to create", })
     }
 }
 export const GetAllTests = async (req, res) => {
@@ -152,9 +124,9 @@ export const GetAllTests = async (req, res) => {
 }
 export const EditPaper = async (req, res) => {
     try {
-        const user = JSON.parse(req.cookies.user);
-        const id = req.cookies.id;
-        const { Statements, Saved, Options, Answers, duration } = req.body;
+
+
+        const { Statements, Saved, Options, Answers, duration, user, id } = req.body;
         res.clearCookie("id");
         const test = await Test.findOne({ _id: id });
         if (!test) return res.status(400).json({ mess: "Paper not found" });
@@ -212,18 +184,7 @@ export const GetAll = async (req, res) => {
 }
 export const GetAllUserTest = async (req, res) => {
     try {
-        const userCookie = req.cookies.user;
-
-        if (!userCookie) {
-            return res.status(200).json({ message: "No user cookie found" });
-        }
-
-        let user;
-        try {
-            user = JSON.parse(userCookie);
-        } catch (err) {
-            return res.status(200).json({ message: "Invalid user cookie format" });
-        }
+        const { user } = req.body;
 
         const id = user.id;
 
@@ -302,7 +263,7 @@ export const GetTest = async (req, res) => {
 }
 export const GetCreatedTests = async (req, res) => {
     try {
-        const user = JSON.parse(req.cookies.user);
+        const { user } = req.body;
         const UserId = user.id;
         const UserTests = await UserTest.findOne({ UserId });
         const created = UserTests.Created;

@@ -14,9 +14,9 @@ router.get("/get-all-tests",GetAllTests);
 router.post("/edit-paper",EditPaper);
 router.post("/delete-all",DeletAll);
 router.get("/get-all",GetAll);
-router.get("/get-userTest",GetAllUserTest)
+router.post("/get-userTest",GetAllUserTest)
 router.post("/attempt",MarkTestAsAttempted)
 router.post("/get-test",GetTest)
-router.get("/get-created-test",GetCreatedTests)
+router.post("/get-created-test",GetCreatedTests)
 router.post("/get-pdf",GeneratePdf)
 export default router;
