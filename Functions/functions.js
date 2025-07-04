@@ -29,8 +29,8 @@ export const DirectLogin = async (req, res) => {
             id: user._id,
         }), {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: true,
+            sameSite: "None",
             maxAge: 24 * 60 * 60 * 1000,
         });
         return res.status(200).json({ message: "Login Successfull" });
@@ -110,8 +110,8 @@ export const GiveUser = async (req, res) => {
         id: user._id,
     }), {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "None",
         maxAge: 24 * 60 * 60 * 1000,
     });
     console.log(user);
