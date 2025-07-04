@@ -1,6 +1,8 @@
 import { User, UserTest, Test } from "../Model/model.js"
 import nodemailer from "nodemailer"
 import dotenv from "dotenv"
+import PDFDocument from "pdfkit"
+import path from "path"
 dotenv.config();
 const transporter = nodemailer.createTransport({
     service: "Gmail",
@@ -142,9 +144,10 @@ export const GetAllTests = async (req, res) => {
 }
 export const EditPaper = async (req, res) => {
     try {
+        const user = JSON.parse(req.cookies.user);
         const id = req.cookies.id;
         const { Statements, Saved, Options, Answers, duration } = req.body;
-
+        res.clearCookie("id");
         const test = await Test.findOne({ _id: id });
         if (!test) return res.status(400).json({ mess: "Paper not found" });
 
@@ -162,11 +165,12 @@ export const EditPaper = async (req, res) => {
         test.Duration = duration;
 
         await test.save();
-        const AllUsers = await UserTest.find();
-        for (const user of AllUsers) {
-            user.UnAttempted.push(test);
-            await user.save();
-        }
+        const userId = user.id;
+        const userTest = await UserTest.findOne({ UserId: userId });
+        const created = userTest.Created;
+        created.push(test);
+        console.log(userTest);
+        await userTest.save();
         console.log("Updated Test:", test);
         return res.status(200).json({ mess: "Test updated successfully" });
     } catch (err) {
@@ -203,7 +207,7 @@ export const GetAllUserTest = async (req, res) => {
         const userCookie = req.cookies.user;
 
         if (!userCookie) {
-            return res.status(401).json({ message: "No user cookie found" });
+            return res.status(200).json({ message: "No user cookie found" });
         }
 
         let user;
@@ -246,7 +250,7 @@ export const MarkTestAsAttempted = async (req, res) => {
         } catch (err) {
             return res.status(400).json({ message: "Invalid user cookie format" });
         }
-        const UserId=user.id;
+        const UserId = user.id;
         if (!UserId) return res.status(401).json({ message: "User not authenticated" });
         console.log(UserId);
         const TesttoAttempt = await Test.findById(testid);
@@ -271,20 +275,118 @@ export const MarkTestAsAttempted = async (req, res) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
-export const GetTest=async (req,res)=>{
-    const {id}=req.body;
-    const TestPaper=await Test.findById(id);
-    if(!TestPaper)return res.status(404).json({mess:"Test Not found"});
-    const AllQuestions=TestPaper.Questions;
-    const statements=[];
-    const options=[];
-    for(let question of AllQuestions){
+export const GetTest = async (req, res) => {
+    const { id } = req.body;
+    const TestPaper = await Test.findById(id);
+    if (!TestPaper) return res.status(404).json({ mess: "Test Not found" });
+    const AllQuestions = TestPaper.Questions;
+    const statements = [];
+    const options = [];
+    for (let question of AllQuestions) {
         statements.push(question.Statement);
         options.push(question.Option);
     }
     console.log(statements);
     console.log(options);
     console.log(statements.length);
-    
-    return res.status(200).json({message:"TestPaper",Statements:statements,Options:options,len:statements.length});
+
+    return res.status(200).json({ message: "TestPaper", Statements: statements, Options: options, len: statements.length });
 }
+export const GetCreatedTests = async (req, res) => {
+    try {
+        const user = JSON.parse(req.cookies.user);
+        const UserId = user.id;
+        const UserTests = await UserTest.findOne({ UserId });
+        const created = UserTests.Created;
+        console.log(created);
+        return res.status(200).json({ created: created });
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({ mess: "hello" });
+    }
+
+}
+
+export const GeneratePdf = async (req, res) => {
+    const { paperData } = req.body;
+    try {
+        const doc = new PDFDocument({ margin: 40 });
+        let chunks = [];
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", "attachment; filename=TestPaper.pdf");
+
+        doc.on("data", (chunk) => chunks.push(chunk));
+        doc.on("end", () => {
+            const pdfBuffer = Buffer.concat(chunks);
+            res.end(pdfBuffer);
+        });
+
+        // Title Header
+        doc
+            .fontSize(24)
+            .font('Times-Bold')
+            .text("ALLEN", { align: "left" })
+            .fontSize(12)
+            .text(`Target : JEE (Main + Advanced) ${paperData.date || '2025/xx/xx'} / Paper-1`, {
+                align: "right",
+            });
+
+        doc.moveDown();
+        doc.moveTo(40, doc.y).lineTo(550, doc.y).stroke();
+
+        doc.moveDown();
+
+        // Paper Title & Meta Info
+        doc
+            .fontSize(16)
+            .font("Times-Bold")
+            .text(`${paperData.title || 'Test Paper'}`, { align: "center" });
+
+        doc
+            .fontSize(10)
+            .font("Times-Roman")
+            .text(`Duration: ${paperData.Duration || 90} mins`, { align: "center" });
+
+        doc.moveDown(1.5);
+
+        // Each Question
+        paperData.Questions.forEach((q, index) => {
+            if (doc.y > 720) {
+                doc.addPage();
+            }
+
+            doc
+                .font("Times-Bold")
+                .fontSize(12)
+                .text(`${index + 1}. ${q.Statement}`, {
+                    continued: false,
+                    lineGap: 5,
+                });
+
+            q.Option.forEach((opt, i) => {
+                const optChar = String.fromCharCode(65 + i); // A B C D
+                doc
+                    .font("Times-Roman")
+                    .fontSize(11)
+                    .text(`    (${optChar}) ${opt}`, {
+                        lineGap: 2,
+                    });
+            });
+
+            doc.moveDown();
+        });
+
+        // Bottom Footer Line
+        doc.moveDown();
+        doc.moveTo(40, doc.y).lineTo(550, doc.y).stroke();
+        doc.fontSize(10).text("Space for Rough Work / कच्चे कार्य के लिए स्थान", {
+            align: "center",
+        });
+
+        doc.end();
+    } catch (error) {
+        console.log("PDF Not Generated", error);
+        return res.status(404).json({ mess: "PDF Not Generated" });
+    }
+};

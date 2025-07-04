@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 const UserSchema = new mongoose.Schema({
     Email: { type: String, required: true },
     Password: { type: String, required: true },
@@ -13,7 +13,7 @@ const TestSchema = new mongoose.Schema({
     Questions: [
         {
             Statement: {
-                type: String, 
+                type: String,
             },
             Option: {
                 type: [String],
@@ -50,6 +50,10 @@ const UserTests = mongoose.Schema({
         default: []
     },
     UnAttempted: {
+        type: Array,
+        default: []
+    },
+    Created: {
         type: Array,
         default: []
     }

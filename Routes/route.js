@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Signup, DirectLogin, FindEmail, Sendotp, Createuser, DeleteUser, GiveUser, GetAllUserTest, GetAll, MarkTestAsAttempted, GetTest } from "../Functions/functions.js";
+import { Signup, DirectLogin, FindEmail, Sendotp, Createuser, DeleteUser, GiveUser, GetAllUserTest, GetAll, MarkTestAsAttempted, GetTest, GetCreatedTests, GeneratePdf } from "../Functions/functions.js";
 import { CreateTest, DeletAll, EditPaper, GetAllTests } from "../Functions/functions.js";
 const router = Router();
 router.post("/login", DirectLogin)
@@ -17,5 +17,6 @@ router.get("/get-all",GetAll);
 router.get("/get-userTest",GetAllUserTest)
 router.post("/attempt",MarkTestAsAttempted)
 router.post("/get-test",GetTest)
-
+router.get("/get-created-test",GetCreatedTests)
+router.post("/get-pdf",GeneratePdf)
 export default router;
