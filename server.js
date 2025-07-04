@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 const app = e();
 app.use(e.json());
+app.use(cookieParser());
 app.use(cors({
   origin: ["http://localhost:5173", "https://sigmajeeoff.netlify.app"],
   credentials: true
@@ -16,7 +17,7 @@ app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-app.use(cookieParser());
+
 try {
     const Uri = process.env.URI;
     await mongoose.connect(Uri);
