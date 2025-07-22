@@ -12,7 +12,7 @@ app.use(cors({
   credentials: true
 }));
 
-app.get("/", (req, res) => {k
+app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
